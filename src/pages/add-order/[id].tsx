@@ -30,6 +30,8 @@ interface Product {
   totalPrice: number;
 }
 
+const apiBaseUrl = process.env.NEXT_PUBLIC_BACK_URL;
+
 const AddEditOrderPage: React.FC = () => {
   const router = useRouter();
   const { id } = router.query;
@@ -48,7 +50,7 @@ const AddEditOrderPage: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/products');
+        const response = await axios.get(`${apiBaseUrl}/api/products`);
         
         setAvailableProducts(response.data);
       } catch (error) {
@@ -63,7 +65,7 @@ const AddEditOrderPage: React.FC = () => {
     if (id) {
       const fetchOrder = async () => {
         try {
-          const response = await axios.get(`http://localhost:8000/api/orders/${id}`);
+          const response = await axios.get(`${apiBaseUrl}/api/orders/${id}`);
           const order = response.data;
           setIsNewOrder(false);
           setStatus(order.status);
@@ -127,7 +129,7 @@ const AddEditOrderPage: React.FC = () => {
 
   const handleRemoveProduct = async (productId: string) => {
     try {
-      await axios.delete(`http://localhost:8000/api/products/${productId}`);
+      await axios.delete(`${apiBaseUrl}/api/products/${productId}`);
       setProducts(products.filter(product => product.id !== productId));
     } catch (error) {
       console.error('Error removing product:', error);
@@ -154,9 +156,9 @@ const AddEditOrderPage: React.FC = () => {
       };
 
       if(!isNewOrder) {
-        await axios.put(`http://localhost:8000/api/orders/${id}`, orderData);
+        await axios.put(`${apiBaseUrl}/api/orders/${id}`, orderData);
       }else{
-        await axios.post('http://localhost:8000/api/orders', orderData);
+        await axios.post(`${apiBaseUrl}/api/orders`, orderData);
       }
 
       router.push('/my-orders');

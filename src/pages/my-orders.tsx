@@ -15,6 +15,8 @@ interface Order {
   status: string;
 }
 
+const apiBaseUrl = process.env.NEXT_PUBLIC_BACK_URL;
+
 const MyOrders: React.FC = () => {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -22,9 +24,10 @@ const MyOrders: React.FC = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log(apiBaseUrl)
     const fetchOrders = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/orders'); 
+        const response = await axios.get(`${apiBaseUrl}/api/orders`); 
         setOrders(response.data); 
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -46,7 +49,7 @@ const MyOrders: React.FC = () => {
   const confirmDeleteOrder = async () => {
     if (selectedOrderId) {
       try {
-        await axios.delete(`http://localhost:8000/api/orders/${selectedOrderId}`); 
+        await axios.delete(`${apiBaseUrl}/api/orders/${selectedOrderId}`); 
         setOrders(orders.filter(order => order.id !== selectedOrderId)); 
         setOpenModal(false);
       } catch (error) {
