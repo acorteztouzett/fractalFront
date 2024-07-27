@@ -158,7 +158,12 @@ const AddEditOrderPage: React.FC = () => {
       if(!isNewOrder) {
         await axios.put(`${apiBaseUrl}/api/orders/${id}`, orderData);
       }else{
-        await axios.post(`${apiBaseUrl}/api/orders`, orderData);
+        await axios.post(`${apiBaseUrl}/api/orders`, orderData,{
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          
+        });
       }
 
       router.push('/my-orders');
