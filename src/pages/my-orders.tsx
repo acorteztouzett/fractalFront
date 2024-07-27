@@ -24,7 +24,6 @@ const MyOrders: React.FC = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log(apiBaseUrl)
     const fetchOrders = async () => {
       try {
         const response = await axios.get(`${apiBaseUrl}/api/orders`); 

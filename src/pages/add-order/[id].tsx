@@ -138,7 +138,7 @@ const AddEditOrderPage: React.FC = () => {
 
   const handleSaveOrder = async () => {
     try {
-      // Prepare the order data
+      
       const orderData = {
         id,
         order_number: orderNumber,
