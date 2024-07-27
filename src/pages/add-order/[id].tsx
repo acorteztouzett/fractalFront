@@ -160,9 +160,9 @@ const AddEditOrderPage: React.FC = () => {
       }else{
         await axios.post(`${apiBaseUrl}/api/orders`, orderData,{
           headers: {
-            'Content-Type': 'application/json'
+            'Access-Control-Allow-Origin': '*'
           },
-          
+
         });
       }
 
