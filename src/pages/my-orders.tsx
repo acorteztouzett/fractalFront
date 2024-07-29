@@ -26,15 +26,20 @@ const MyOrders: React.FC = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await axios.get(`${apiBaseUrl}/api/orders`); 
-        setOrders(response.data); 
+        const response = await fetch(`${apiBaseUrl}/api/orders`);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        setOrders(data);
       } catch (error) {
         console.error('Error fetching orders:', error);
       }
     };
-
+  
     fetchOrders();
   }, []);
+  
 
   const handleEditOrder = (orderId: string) => {
     router.push(`/add-order/${orderId}`);
@@ -48,15 +53,22 @@ const MyOrders: React.FC = () => {
   const confirmDeleteOrder = async () => {
     if (selectedOrderId) {
       try {
-        await axios.delete(`${apiBaseUrl}/api/orders/${selectedOrderId}`); 
-        setOrders(orders.filter(order => order.id !== selectedOrderId)); 
+        const response = await fetch(`${apiBaseUrl}/api/orders/${selectedOrderId}`, {
+          method: 'DELETE',
+        });
+  
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+  
+        setOrders(orders.filter(order => order.id !== selectedOrderId));
         setOpenModal(false);
       } catch (error) {
         console.error('Error deleting order:', error);
       }
     }
   };
-
+  
   const formatDate = (isoDateString: string): string => {
     const date = new Date(isoDateString);
     
@@ -97,12 +109,13 @@ const MyOrders: React.FC = () => {
                     color="primary"
                     startIcon={<EditIcon />}
                     onClick={() => handleEditOrder(order.id)}
+                    disabled={order.status === 'Completed'}
                   >
                     Edit Order
                   </Button>
                   <Button
                     variant="contained"
-                    color="secondary"
+                    color="error"
                     startIcon={<DeleteIcon />}
                     onClick={() => handleDeleteOrder(order.id)}
                   >
@@ -117,21 +130,26 @@ const MyOrders: React.FC = () => {
 
       <Button
         variant="contained"
-        color="primary"
+        color="info"
         style={{ marginTop: '20px' }}
         onClick={() => router.push(`add-order/${uuidv4()}`)}
       >
         Add New Order
       </Button>
 
+      <Button
+        variant="contained"
+        color="secondary"
+        style={{ marginTop: '20px' }}
+        onClick={() => router.push('/')}
+      >
+        Back to Home
+      </Button>
+
       <Modal
         open={openModal}
         onClose={() => setOpenModal(false)}
         closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-        }}
       >
         <Fade in={openModal}>
           <div style={{
@@ -140,10 +158,11 @@ const MyOrders: React.FC = () => {
             margin: 'auto',
             padding: 20,
             textAlign: 'center',
+            borderRadius: '8px'
           }}>
-            <h2>Confirm Deletion</h2>
+            <h2>Confirm </h2>
             <p>Are you sure you want to delete this order?</p>
-            <Button variant="contained" color="primary" onClick={confirmDeleteOrder}>Delete</Button>
+            <Button variant="contained" color="error" onClick={confirmDeleteOrder}>Delete</Button>
             <Button variant="contained" onClick={() => setOpenModal(false)}>Cancel</Button>
           </div>
         </Fade>

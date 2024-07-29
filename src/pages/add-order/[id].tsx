@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid';
 import Head from 'next/head';
 import {
   Button,
@@ -45,48 +43,63 @@ const AddEditOrderPage: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productId, setProductId] = useState<string | null>(null);
   const [productQty, setProductQty] = useState(1);
-  const [status, setStatus] = useState('Pending');
+  const [status, setStatus] = useState('');
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get(`${apiBaseUrl}/api/products`);
+
+        if(isNewOrder){
+          setAvailableProducts([]);
+        }
+        const response = await fetch(`${apiBaseUrl}/api/products`);
         
-        setAvailableProducts(response.data);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+  
+        const data = await response.json();
+        setAvailableProducts(data);
       } catch (error) {
-        console.error('Error fetching products', error);
+        console.error('Error fetching products:', error);
       }
     };
-
+  
     fetchProducts();
-  }, []);
+  }, []);  
 
   useEffect(() => {
     if (id) {
       const fetchOrder = async () => {
         try {
-          const response = await axios.get(`${apiBaseUrl}/api/orders/${id}`);
-          const order = response.data;
-          setIsNewOrder(false);
-          setStatus(order.status);
-          setOrderNumber(order.id);
-          setOrderDate(new Date(order.createdAt).toISOString().split('T')[0]);
-          setProducts(order.products.map((product: any) => ({
-            id: product.id,
-            name: product.name,
-            unitPrice: parseFloat(product.unitPrice),
-            qty: product.qty,
-            totalPrice: parseFloat(product.totalPrice),
-          })));
+          
+          const response= await fetch(`${apiBaseUrl}/api/orders/${id}`);
+          
+          const order = await response.json();
+          console.log(order)
+          if(order.id){
+            setIsNewOrder(false)
+            setStatus(order.status);
+            setOrderNumber(order.id);
+            setOrderDate(new Date(order.createdAt).toISOString().split('T')[0]);
+            setProducts(order.products.map((product:any) => ({
+              id: product.id,
+              name: product.name,
+              unitPrice: parseFloat(product.unitPrice),
+              qty: product.qty,
+              totalPrice: parseFloat(product.totalPrice),
+            })));
+          }
 
         } catch (error) {
           console.error('Error fetching order', error);
         }
       };
-
+  
       fetchOrder();
     }
   }, [id]);
+  
 
   const handleAddProduct = () => {
     setSelectedProduct(null);
@@ -129,19 +142,25 @@ const AddEditOrderPage: React.FC = () => {
 
   const handleRemoveProduct = async (productId: string) => {
     try {
-      await axios.delete(`${apiBaseUrl}/api/products/${productId}`);
+      const response = await fetch(`${apiBaseUrl}/api/products/${productId}`, {
+        method: 'DELETE',
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
       setProducts(products.filter(product => product.id !== productId));
     } catch (error) {
       console.error('Error removing product:', error);
     }
   };
-
+  
   const handleSaveOrder = async () => {
     try {
       
       const orderData = {
-        id,
-        order_number: orderNumber,
+        id:id,
         products_number: totalProducts,
         final_price: finalPrice,
         status: status,
@@ -155,12 +174,34 @@ const AddEditOrderPage: React.FC = () => {
         }))
       };
 
-      if(!isNewOrder) {
-        await axios.put(`${apiBaseUrl}/api/orders/${id}`, orderData);
-      }else{
-        await axios.post(`${apiBaseUrl}/api/orders`, orderData);
+      if (!isNewOrder) {
+        const response = await fetch(`${apiBaseUrl}/api/orders/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          },
+          body: JSON.stringify(orderData),
+        });
+      
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+      } else {
+        const response = await fetch(`${apiBaseUrl}/api/orders`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          },
+          body: JSON.stringify(orderData),
+        });
+      
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
       }
-
+      
       router.push('/my-orders');
     } catch (error) {
       console.error('Error saving order:', error);
@@ -265,10 +306,6 @@ const AddEditOrderPage: React.FC = () => {
         open={openModal}
         onClose={() => setOpenModal(false)}
         closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-        }}
       >
         <Fade in={openModal}>
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', margin: '50px auto', maxWidth: '500px' }}>
@@ -311,6 +348,15 @@ const AddEditOrderPage: React.FC = () => {
         onClick={handleSaveOrder}
       >
         Save Order
+      </Button>
+
+      <Button
+        variant="contained"
+        color="error"
+        style={{ marginTop: '20px', marginLeft: '20px' }}
+        onClick={() => router.push('/my-orders')}
+      >
+        Cancel
       </Button>
     </div>
   );
