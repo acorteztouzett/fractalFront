@@ -48,6 +48,7 @@ const AddEditOrderPage: React.FC = () => {
   const [productQty, setProductQty] = useState(1);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(true);
+  const [openEditModal, setOpenEditModal] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -82,7 +83,7 @@ const AddEditOrderPage: React.FC = () => {
           const response= await fetch(`${apiBaseUrl}/api/orders/${id}`);
           
           const order = await response.json();
-          console.log(order)
+          
           if(order.id){
             setIsNewOrder(false)
             setStatus(order.status);
@@ -130,16 +131,44 @@ const AddEditOrderPage: React.FC = () => {
     setOpenModal(true);
   };
 
-  const handleEditProduct = async (productId: string) => {
+  const handleEditProduct = (productId: string) => {
     try {
       
       setProductId(productId);
-      setProductQty(1);
-      setOpenModal(true);
+      setOpenEditModal(true);
     } catch (error) {
       console.error('Error fetching product details:', error);
     }
   };
+
+  const handleSaveChanges = async () => {
+    try {
+      await fetch(`${apiBaseUrl}/api/products/${productId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({
+          qty: productQty
+        }),
+      });
+      
+      const selectedProductData = availableProducts.find(p => p.id === productId);
+      if (selectedProductData) {
+        const newProduct = {
+          ...selectedProductData,
+          qty: productQty,
+          totalPrice: selectedProductData.unitPrice * productQty
+        };
+        setProducts(products.map(p => p.id === productId ? newProduct : p));
+        setOpenEditModal(false);
+      }
+      
+    } catch (error) {
+      console.error('Error saving changes:', error);
+    }
+  }
 
   const handleSaveProduct = () => {
     if (productId !== null) {
@@ -320,6 +349,7 @@ const AddEditOrderPage: React.FC = () => {
                   <TableCell>${product.totalPrice}</TableCell>
                   <TableCell>
                     <Button onClick={() => handleRemoveProduct(product.id)}>Remove</Button>
+                    <Button onClick={() => handleEditProduct(product.id)}>Edit</Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -335,7 +365,7 @@ const AddEditOrderPage: React.FC = () => {
       >
         <Fade in={openModal}>
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', margin: '50px auto', maxWidth: '500px' }}>
-            <h2>{selectedProduct ? 'Edit Product' : 'Add Product'}</h2>
+            <h2>Add Product</h2>
             <form>
               <FormControl fullWidth margin="normal">
                 <InputLabel>Product</InputLabel>
@@ -361,6 +391,45 @@ const AddEditOrderPage: React.FC = () => {
               />
             </form>
             <Button variant="contained" color="primary" onClick={handleSaveProduct}>
+              Save
+            </Button>
+          </div>
+        </Fade>
+      </Modal>
+
+      <Modal
+        open={openEditModal}
+        onClose={() => setOpenModal(false)}
+        closeAfterTransition
+      >
+        <Fade in={openEditModal}>
+          <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', margin: '50px auto', maxWidth: '500px' }}>
+            <h2>Edit Product</h2>
+            <form>
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Product</InputLabel>
+                <Select
+                  value={productId}
+                  onChange={(e) => setProductId(e.target.value as string)}
+                  disabled
+                >
+                  {availableProducts.map((product) => (
+                    <MenuItem key={product.id} value={product.id}>
+                      {product.name} - ${product.unitPrice}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                label="Quantity"
+                type="number"
+                value={productQty}
+                onChange={(e) => setProductQty(parseInt(e.target.value))}
+                fullWidth
+                margin="normal"
+              />
+            </form>
+            <Button variant="contained" color="primary" onClick={handleSaveChanges}>
               Save
             </Button>
           </div>
