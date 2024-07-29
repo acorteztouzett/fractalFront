@@ -17,7 +17,10 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Paper
+  Paper,
+  Container,
+  CircularProgress,
+  Box
 } from '@mui/material';
 
 interface Product {
@@ -44,6 +47,7 @@ const AddEditOrderPage: React.FC = () => {
   const [productId, setProductId] = useState<string | null>(null);
   const [productQty, setProductQty] = useState(1);
   const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -62,11 +66,13 @@ const AddEditOrderPage: React.FC = () => {
         setAvailableProducts(data);
       } catch (error) {
         console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
       }
     };
   
     fetchProducts();
-  }, []);  
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -100,6 +106,23 @@ const AddEditOrderPage: React.FC = () => {
     }
   }, [id]);
   
+  if (loading) {
+    return (
+      <Container
+        maxWidth="xs"
+        style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh' 
+        }}
+      >
+        <Box>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
 
   const handleAddProduct = () => {
     setSelectedProduct(null);
@@ -144,6 +167,9 @@ const AddEditOrderPage: React.FC = () => {
     try {
       const response = await fetch(`${apiBaseUrl}/api/products/${productId}`, {
         method: 'DELETE',
+        headers: {
+          'Access-Control-Allow-Origin': '*'
+        }
       });
   
       if (!response.ok) {

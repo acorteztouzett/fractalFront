@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import axios from 'axios';
-import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Modal, Backdrop, Fade } from '@mui/material';
+import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Modal, Backdrop, Fade, Container, CircularProgress, Box } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import Head from 'next/head';
@@ -22,6 +21,7 @@ const MyOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [openModal, setOpenModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -34,12 +34,31 @@ const MyOrders: React.FC = () => {
         setOrders(data);
       } catch (error) {
         console.error('Error fetching orders:', error);
+      } finally {
+        setLoading(false);
       }
     };
   
     fetchOrders();
   }, []);
   
+  if (loading) {
+    return (
+      <Container
+        maxWidth="xs"
+        style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh' 
+        }}
+      >
+        <Box>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
 
   const handleEditOrder = (orderId: string) => {
     router.push(`/add-order/${orderId}`);
@@ -55,6 +74,9 @@ const MyOrders: React.FC = () => {
       try {
         const response = await fetch(`${apiBaseUrl}/api/orders/${selectedOrderId}`, {
           method: 'DELETE',
+          headers: {
+            'Access-Control-Allow-Origin': '*'
+          }
         });
   
         if (!response.ok) {
