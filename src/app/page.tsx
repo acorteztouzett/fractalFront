@@ -1,5 +1,6 @@
 import Image from "next/image";
 import styles from "./page.module.css";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -11,27 +12,23 @@ export default function Home() {
       </div>
 
       <div className={styles.grid}>
-        <a
-          href="/my-orders"
-          className={styles.card}
-        >
-          <h2>
-            My Orders <span>-&gt;</span>
-          </h2>
-          <p>Open to manage my orders</p>
-        </a>
+        <Link href="/my-orders" className={styles.card}>
+            <h2>
+              My Orders <span>-&gt;</span>
+            </h2>
+            <p>Open to manage your orders</p>
+        </Link>
       </div>
 
       <div className={styles.grid}>
-        <a
-          href="/products"
-          className={styles.card}
-        >
-          <h2>
-            Products <span>-&gt;</span>
-          </h2>
-          <p>Open to manage the products</p>
-        </a>
+        <Link href="/products" className={styles.card}>
+          
+            <h2>
+              Products <span>-&gt;</span>
+            </h2>
+            <p>Open to see the products</p>
+          
+        </Link>
       </div>
         
     </main>
